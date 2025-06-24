@@ -8,6 +8,8 @@ var app = express();
 app.disable("x-powered-by");
 var fs = require("fs");
 var path = require("path");
+const bcrypt = require("bcrypt");
+const helmet = require('helmet');
 
 app.use(function (req, res, next) {
   res.set({
@@ -18,6 +20,25 @@ app.use(function (req, res, next) {
   app.disable("x-powered-by");
   next();
 });
+
+const ninetyDaysInSeconds = 90 * 24 * 60 * 60;
+
+app.use(helmet({
+  frameguard: { action: 'deny' },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "trusted-cdn.com"]
+    }
+  },
+  dnsPrefetchControl: false,
+  hsts: {
+    maxAge: ninetyDaysInSeconds,
+    force: true
+  },
+  hidePoweredBy: true,
+  xssFilter: true
+}));
 
 app.get("/file/*?", function (req, res, next) {
   if (req.params[0] === ".env") {
